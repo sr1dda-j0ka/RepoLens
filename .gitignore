@@ -1,0 +1,29 @@
+# Virtual Environment
+backend/venv/
+
+# Cloned repositories
+backend/repos/
+
+# Python cache
+backend/__pycache__/
+backend/**/*.pyc
+
+# Environment variables
+backend/.env
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# FAISS / vector db storage (later)
+backend/faiss_indexes/
+
+# HuggingFace cache (optional)
+.cache/
+
+# Logs
+*.log
