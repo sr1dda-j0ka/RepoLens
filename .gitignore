@@ -27,3 +27,6 @@ backend/faiss_indexes/
 
 # Logs
 *.log
+
+#Tests
+backend/test_gemini.py
