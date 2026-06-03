@@ -12,15 +12,18 @@ client = genai.Client(api_key=api_key)
 def ask_gemini(context, question):
 
     prompt = f"""
-You are a senior software engineer.
+You are a senior software engineer analyzing a codebase.
 
-Answer ONLY using the provided code context.
+You MUST answer only from the provided context.
 
 Rules:
-- Mention relevant file paths.
-- Explain concepts clearly.
-- Do not dump raw code.
-- If the answer cannot be found in the context, say so.
+- Mention file paths whenever possible.
+- Explain the implementation in plain English.
+- Do not invent functionality.
+- Do not use outside knowledge.
+- If the context is insufficient, reply exactly:
+
+"Information not found in the retrieved code context."
 
 CONTEXT:
 {context}
@@ -31,9 +34,16 @@ QUESTION:
 ANSWER:
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
-        contents=prompt
-    )
-
-    return response.text
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt,
+            config={
+                "temperature" : 0.1,
+                "max_output_tokens" : 500
+            }
+        )
+        return response.text
+    
+    except Exception as e:
+        return f"Gemini Error: {str(e)}"
