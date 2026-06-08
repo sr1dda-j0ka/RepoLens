@@ -4,9 +4,20 @@ from services.github_loader import clone_repo
 from services.file_loader import load_code_files
 from services.embedder import create_vector_store
 from services.gemini_service import ask_gemini
+from fastapi.middleware.cors import CORSMiddleware
+
+origins=["http://localhost:5173","http://127.0.0.1:5173"]
 
 app = FastAPI()
 vector_store=None
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class RepoRequest(BaseModel):
     repo_url: str

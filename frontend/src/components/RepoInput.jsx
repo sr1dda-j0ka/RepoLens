@@ -1,21 +1,24 @@
-export default function RepoInput() {
+export default function RepoInput({ repoURL, setURL, loading, loadRepo }) {
   return (
-    <div className="
+    <div
+      className="
       bg-slate-900
       border
       border-slate-800
       rounded-2xl
       p-6
-    ">
-      <h2 className="text-lg font-semibold mb-4">
-        Load Repository
-      </h2>
+    "
+    >
+      <h2 className="text-lg font-semibold mb-4">Load Repository</h2>
 
       <div className="flex gap-3 flex-wrap">
-
         <input
           type="text"
           placeholder="Github Repository URL"
+          value={repoURL}
+          onChange={(e) => {
+            setURL(e.target.value);
+          }}
           className="
             flex-1
             bg-slate-950
@@ -27,15 +30,17 @@ export default function RepoInput() {
           "
         />
 
-        <button className="
+        <button
+          onClick={loadRepo}
+          className="
           bg-blue-600
           px-5
           rounded-xl
           min-h-[45px]
-        ">
-          Load
+        "
+        >
+          {loading ? "Loading..." : "Load"}
         </button>
-
       </div>
     </div>
   );
