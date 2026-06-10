@@ -5,8 +5,15 @@ from services.file_loader import load_code_files
 from services.embedder import create_vector_store
 from services.gemini_service import ask_gemini
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
 
-origins=["http://localhost:5173","http://127.0.0.1:5173"]
+load_dotenv()
+
+frontend_url=os.getenv("FRONTEND_URL")
+backend_url=os.getenv("BACKEND_URL")
+
+origins=[frontend_url,backend_url]
 
 app = FastAPI()
 vector_store=None
