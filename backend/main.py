@@ -4,6 +4,9 @@ from services.github_loader import clone_repo
 from services.file_loader import load_code_files
 from services.embedder import create_vector_store
 from services.gemini_service import ask_gemini
+from services.repo_summary import generate_summary
+from services.repo_summary import generate_folder_tree
+from services.repo_summary import generate_repo_stats
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -39,9 +42,19 @@ def getRepo(data: RepoRequest):
     path=clone_repo(data.repo_url)
     docs=load_code_files(path)
     vector_store=create_vector_store(docs)
+    stats=generate_repo_stats(path)
+    folder_tree =generate_folder_tree(path)
+    context=f"""
+    Folder Tree: {folder_tree}
+    Statistics: {stats}
+    """
+    summary=generate_summary(context)
     return{
         "message": "Repo cloned successfully",
-        "total-files": len(docs)
+        "summary": summary,
+        "total-files": len(docs),
+        "folder_tree": folder_tree,
+        "stats": stats
     }
 
 @app.get("/test-search")
