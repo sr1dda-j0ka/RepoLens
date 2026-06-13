@@ -5,6 +5,7 @@ import RepoInput from "./components/RepoInput";
 import ChatInput from "./components/ChatInput";
 import ChatHistory from "./components/ChatHistory";
 import AnswerPanel from "./components/AnswerPanel";
+import RepoOverview from "./components/RepoOverview";
 
 function App() {
   const [repoURL, setURL] = useState("");
@@ -12,6 +13,9 @@ function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [sources, setSources] = useState([]);
+  const [summary, setSummary] = useState("");
+  const [folderTree, setFolderTree] = useState("");
+  const [stats, setStats] = useState(null);
 
   const loadRepo = async () => {
     setLoading(true);
@@ -20,6 +24,10 @@ function App() {
       const res = await api.post("/repo-request", {
         repo_url: repoURL,
       });
+
+      setSummary(res.data.summary);
+      setFolderTree(res.data.folder_tree);
+      setStats(res.data.stats);
 
       alert(res.data.message);
     } catch (err) {
@@ -41,7 +49,7 @@ function App() {
       setAnswer(res.data.answer);
       setSources(res.data.sources);
     } catch (err) {
-      alert("error asking question");
+      alert("Error asking question");
       console.log(err);
     }
   };
@@ -50,36 +58,66 @@ function App() {
     <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-6">
-        <h1 className="text-4xl font-bold mb-2">Analyze Any Repository</h1>
+      <div className="max-w-screen-2xl mx-auto p-6">
+
+        <h1 className="text-4xl font-bold mb-2">
+          Analyze Any Repository
+        </h1>
 
         <p className="text-slate-400 mb-8">
-          Ask questions about any GitHub codebase.
+          AI-powered repository onboarding and semantic code search.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="order-2 md:order-1 col-span-3">
-            <ChatHistory />
+
+          {/* LEFT SIDEBAR */}
+
+          <div className="lg:col-span-3">
+
+            <div className="sticky top-24">
+
+              <ChatHistory />
+
+            </div>
+
           </div>
 
-          <div className="order-1 lg:order-2 lg:col-span-9 flex flex-col gap-6">
+          {/* MAIN CONTENT */}
+
+          <div className="lg:col-span-9 flex flex-col gap-6">
+
             <RepoInput
               repoURL={repoURL}
               setURL={setURL}
               loading={loading}
               loadRepo={loadRepo}
             />
+
+            <RepoOverview
+              summary={summary}
+              folderTree={folderTree}
+              stats={stats}
+            />
+
             <ChatInput
               question={question}
               setQuestion={setQuestion}
               askQuestion={askQuestion}
             />
-            <AnswerPanel answer={answer} sources={sources} />
+
+            <AnswerPanel
+              answer={answer}
+              sources={sources}
+            />
+
           </div>
+
         </div>
+
       </div>
     </div>
   );
 }
 
 export default App;
+
