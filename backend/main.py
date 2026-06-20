@@ -7,6 +7,7 @@ from services.gemini_service import ask_gemini
 from services.repo_summary import generate_summary
 from services.repo_summary import generate_folder_tree
 from services.repo_summary import generate_repo_stats
+from services.reranker import rerank_results
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -78,14 +79,15 @@ def ask_repo(question: str):
 
     if vector_store is None:
         return {"error": "Load a repo first"}
+    
+    results = vector_store.max_marginal_relevance_search(question, k=15,fetch_k=50)
 
-    # Retrieve only top relevant chunks
-    results = vector_store.max_marginal_relevance_search(question, k=3,fetch_k=10)
+    results=rerank_results(results,question)
 
     context_parts = []
 
     MAX_CHARS_PER_CHUNK = 1200
-    MAX_TOTAL_CONTEXT = 3500
+    MAX_TOTAL_CONTEXT = 7000
 
     current_length = 0
 
@@ -95,6 +97,8 @@ def ask_repo(question: str):
 
         formatted_chunk = (
             f"\nFILE: {result.metadata['path']}\n"
+            f"\nFOLDER: {result.metadata['folder']}\n"
+            f"\nLANGUAGE: {result.metadata['language']}\n"
             f"{chunk}\n"
         )
 
