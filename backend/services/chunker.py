@@ -12,7 +12,7 @@ EXTENSION_TO_LANGUAGE = {
     "cpp": Language.CPP,
     "c": Language.CPP,
     "go": Language.GO,
-    "rs": Language.RUST,
+    "rs": Language.RUST
 }
 
 
