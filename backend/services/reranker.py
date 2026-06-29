@@ -1,10 +1,9 @@
+import os
+import re
 def rerank_results(results, question):
 
     question_words = set(
-        question.lower()
-        .replace("_", " ")
-        .replace("-", " ")
-        .split()
+        re.sub(r'[^a-zA-Z0-9\s]', ' ', question.lower()).split()
     )
 
     IMPORTANT_FOLDERS = {
@@ -50,42 +49,28 @@ def rerank_results(results, question):
         path_parts = path.replace("\\", "/").split("/")
 
         if any(part in IMPORTANT_FOLDERS for part in path_parts):
-            score += 4
+            score += 5
 
         if any(part in PLATFORM_FOLDERS for part in path_parts):
             score -= 5
 
-        if metadata.get("is_test", False):
+        if metadata.get("is_test", False) or "test" in path_parts or filename.startswith("test_"):
+            score -= 8
+
+        if metadata.get("is_example", False) or "docs_src" in path_parts:
             score -= 4
 
-        if metadata.get("is_example", False):
-            score -= 2
 
-
-        if 500 < size < 50000:
+        if 500 < size < 60000:
             score += 1
 
 
-        filename_words = set(
-            filename
-            .replace(".py", "")
-            .replace(".js", "")
-            .replace(".ts", "")
-            .replace(".tsx", "")
-            .replace(".jsx", "")
-            .replace(".java", "")
-            .replace(".cpp", "")
-            .replace(".go", "")
-            .replace(".rs", "")
-            .replace("_", " ")
-            .replace("-", " ")
-            .split()
-        )
+        name_without_ext, _ = os.path.splitext(filename)
+        filename_words = set(re.split(r'[^a-zA-Z0-9]', name_without_ext))
 
         overlap = len(
             question_words.intersection(filename_words)
         )
-
         score += overlap * 4
 
 
@@ -106,14 +91,9 @@ def rerank_results(results, question):
         ]
 
         if any(name in filename for name in important_names):
-            score += 2
+            score += 3
 
-        reranked.append(
-            (
-                score,
-                r
-            )
-        )
+        reranked.append((score, r))
 
     reranked.sort(
         key=lambda x: x[0],

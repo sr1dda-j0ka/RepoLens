@@ -5,6 +5,7 @@ import time
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from services.chunker import chunk_content
+from services.progress_tracker import tracker
 
 print("Loading embedding model into memory...")
 embeddings = HuggingFaceEmbeddings(
@@ -17,6 +18,11 @@ def create_vector_store(docs):
     print("USE_GPU:", os.environ.get("USE_GPU"))
     start=time.perf_counter()
     chunks = chunk_content(docs)
+
+    tracker.update(
+        chunks=len(chunks)
+    )
+
     print(f"Files: {len(docs)}")
     print(f"Chunks: {len(chunks)}")
     print(f"Chunking took {time.perf_counter()-start:.2f}s")
@@ -28,6 +34,13 @@ def create_vector_store(docs):
 
     
     start = time.perf_counter()
+
+    tracker.update(
+        stage="Generating Embeddings",
+        progress=40,
+        total_chunks=len(chunks)
+    )
+    
     vector_store = FAISS.from_texts(
         texts=texts,
         embedding=embeddings,

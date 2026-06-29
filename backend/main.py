@@ -8,6 +8,7 @@ from services.repo_summary import generate_summary
 from services.repo_summary import generate_folder_tree
 from services.repo_summary import generate_repo_stats
 from services.reranker import rerank_results
+from services.progress_tracker import tracker
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -40,9 +41,38 @@ def home():
 @app.post("/repo-request")
 def getRepo(data: RepoRequest):
     global vector_store
+
+    tracker.reset()
+    tracker.update(
+        stage="Cloning Repository",
+        progress=5
+    )
+
     path=clone_repo(data.repo_url)
+
+    tracker.update(
+        stage="Scanning Source Files",
+        progress=15
+    )
+
     docs=load_code_files(path)
+
+    tracker.update(
+        files=len(docs),
+        progress=20
+    )
+    tracker.update(
+        stage="Generating Code Chunks",
+        progress=30
+    )
+
     vector_store=create_vector_store(docs)
+
+    tracker.update(
+        stage="Generating Repository Summary",
+        progress=95
+    )
+
     stats=generate_repo_stats(path)
     folder_tree =generate_folder_tree(path)
     context=f"""
@@ -50,6 +80,11 @@ def getRepo(data: RepoRequest):
     Statistics: {stats}
     """
     summary=generate_summary(context)
+    tracker.update(
+        stage="Completed",
+        progress=100
+    )
+    
     return{
         "message": "Repo cloned successfully",
         "summary": summary,
@@ -86,8 +121,8 @@ def ask_repo(question: str):
 
     context_parts = []
 
-    MAX_CHARS_PER_CHUNK = 1200
-    MAX_TOTAL_CONTEXT = 7000
+    MAX_CHARS_PER_CHUNK = 4000
+    MAX_TOTAL_CONTEXT = 16000
 
     current_length = 0
 
@@ -102,7 +137,6 @@ def ask_repo(question: str):
             f"{chunk}\n"
         )
 
-        # Stop if total context becomes too large
         if current_length + len(formatted_chunk) > MAX_TOTAL_CONTEXT:
             break
 
@@ -128,3 +162,7 @@ def ask_repo(question: str):
         )
     )
 }
+
+@app.get("/progress")
+def get_progress():
+    return tracker.to_dict() 

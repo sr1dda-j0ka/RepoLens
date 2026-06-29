@@ -7,6 +7,8 @@ from langchain_text_splitters import (
 EXTENSION_TO_LANGUAGE = {
     "py": Language.PYTHON,
     "js": Language.JS,
+    "jsx": Language.JS,
+    "tsx": Language.TS,
     "ts": Language.TS,
     "java": Language.JAVA,
     "cpp": Language.CPP,
@@ -20,6 +22,19 @@ def chunk_content(docs):
 
     all_chunks = []
 
+    cached_splitters = {
+        lang: RecursiveCharacterTextSplitter.from_language(
+            language=lang,
+            chunk_size=4000,
+            chunk_overlap=400,
+        ) for lang in set(EXTENSION_TO_LANGUAGE.values())
+    }
+
+    default_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=4000,
+        chunk_overlap=400,
+    )
+
     for doc in docs:
 
         ext = doc.get("type", "").lower()
@@ -31,6 +46,9 @@ def chunk_content(docs):
         size=doc.get("size", 0)
         is_test=doc.get("is_test", False)
         is_example=doc.get("is_example", False)
+
+        if any(ignored in path.lower() for ignored in ["lock.json", "package-lock", "yarn.lock", "pnpm-lock", "dist/", "build/"]):
+            continue
 
         lc_doc = Document(
             page_content=content,
@@ -50,21 +68,13 @@ def chunk_content(docs):
 
         if language is not None:
 
-            splitter = RecursiveCharacterTextSplitter.from_language(
-                language=language,
-                chunk_size=1200,
-                chunk_overlap=200,
-            )
+            splitter = cached_splitters[language]
 
         else:
 
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1200,
-                chunk_overlap=200,
-            )
+            splitter = default_splitter
 
         chunks = splitter.split_documents([lc_doc])
-
         all_chunks.extend(chunks)
 
     return all_chunks

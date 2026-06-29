@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import api from "./api/api";
 import Navbar from "./components/Navbar";
 import RepoInput from "./components/RepoInput";
@@ -6,10 +6,19 @@ import ChatInput from "./components/ChatInput";
 import ChatHistory from "./components/ChatHistory";
 import AnswerPanel from "./components/AnswerPanel";
 import RepoOverview from "./components/RepoOverview";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 function App() {
   const [repoURL, setURL] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState({
+    stage: "Idle",
+    progress: 0,
+    files: 0,
+    chunks: 0,
+    current_chunk: 0,
+    total_chunks: 0,
+  });
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [sources, setSources] = useState([]);
@@ -17,7 +26,40 @@ function App() {
   const [folderTree, setFolderTree] = useState("");
   const [stats, setStats] = useState(null);
 
+  useEffect(() => {
+
+    if (!loading) return;
+
+    const interval = setInterval(async () => {
+
+      try {
+
+        const res = await api.get("/progress");
+
+        setProgress(res.data);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    }, 1000);
+
+    return () => clearInterval(interval);
+
+  }, [loading]);
+
   const loadRepo = async () => {
+    setProgress({
+    stage: "Starting...",
+    progress: 0,
+    files: 0,
+    chunks: 0,
+    current_chunk: 0,
+    total_chunks: 0,
+  });
+
     setLoading(true);
 
     try {
@@ -108,6 +150,11 @@ function App() {
             <AnswerPanel
               answer={answer}
               sources={sources}
+            />
+
+            <LoadingOverlay
+              loading={loading}
+              progress={progress}
             />
 
           </div>

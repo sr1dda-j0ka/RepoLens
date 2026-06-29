@@ -39,7 +39,7 @@ export default function RepoInput({ repoURL, setURL, loading, loadRepo }) {
           min-h-[45px]
         "
         >
-          {loading ? "Loading..." : "Load"}
+          {loading ? "Analyzing..." : "Analyze"}
         </button>
       </div>
     </div>
